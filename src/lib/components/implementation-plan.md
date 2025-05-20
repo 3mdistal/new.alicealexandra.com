@@ -1,4 +1,4 @@
-# Svelte Dynamic Block Rendering System Implementation Plan
+# Svelte Dynamic Block Rendering System - Architecture Overview
 
 ## 1. Core Concept: Layout Components + Block Renderer
 
@@ -14,6 +14,7 @@ src/
 │   ├── components/
 │   │   ├── blocks/
 │   │   │   ├── BlocksRenderer.svelte      // The main component to render layouts + blocks
+│   │   │   ├── BlocksRendererProps.ts     // TypeScript interfaces for BlocksRenderer
 │   │   │   ├── block_types/             // Svelte components for each *type* of block (TextBlock, ImageBlock, etc.)
 │   │   │   │   ├── TextBlock.svelte
 │   │   │   │   ├── ImageBlock.svelte
@@ -24,6 +25,7 @@ src/
 │   │   │   ├── Flex.svelte
 │   │   └── block_layouts/               // Svelte components for predefined CMS-selectable page section layouts.
 │   │       │                            // These define semantic arrangements and use components from `layouts/` or raw CSS.
+│   │       ├── SingleColumn.svelte
 │   │       ├── TwoColumnEqual.svelte
 │   │       ├── HeroWithSidebar.svelte
 │   │       └── ...
@@ -123,7 +125,7 @@ src/
     4.  Define Svelte snippets within its template for each snippet area specified in `layoutMetadata.slots`. Each defined snippet will render the blocks assigned to its corresponding `slotTarget`.
     5.  Render the dynamically loaded layout component, passing the defined snippets as props.
 
-*   **Props Interface:**
+*   **Props Interface (Example: `src/lib/components/blocks/BlocksRendererProps.ts`):**
     ```typescript
     import type { SvelteComponent, Snippet } from 'svelte';
 
@@ -144,7 +146,8 @@ src/
       slots: LayoutSlot[];
     }
 
-    export type BlocksRendererProps = {
+    // Type for the props of BlocksRenderer.svelte itself
+    export type BlocksRendererComponentProps = {
       layoutId: string;
       blocksData: BlockData[];
       layoutMetadata?: LayoutMetadata; // Essential for knowing which snippets to pass
@@ -157,9 +160,10 @@ src/
     <script lang="ts">
       import { onMount, SvelteComponent } from 'svelte';
       import type { Snippet } from 'svelte';
-      import type { BlockData, LayoutMetadata, BlocksRendererProps } from './BlocksRendererProps'; // Assuming props interface is in a separate file
+      // Assuming props interface is in a separate file as shown above
+      import type { BlockData, LayoutMetadata, BlocksRendererComponentProps } from './BlocksRendererProps';
 
-      let { layoutId, blocksData, layoutMetadata }: BlocksRendererProps = $props();
+      let { layoutId, blocksData, layoutMetadata }: BlocksRendererComponentProps = $props();
 
       const layoutModules = import.meta.glob<Record<string, any>>(
         '$lib/components/block_layouts/*.svelte'
@@ -207,7 +211,6 @@ src/
         It relies on `layoutMetadata.slots` to know which snippet props the LayoutCmpt expects.
         Each snippet (`hero_content`, `sidebar_content`, etc.) is defined here in BlocksRenderer
         and then passed to the <svelte:component this={LayoutCmpt} ... />.
-        This is the Svelte 5 idiomatic way to pass renderable content sections.
       -->
 
       {#snippet hero_content()}
@@ -233,7 +236,15 @@ src/
       {/snippet}
 
       <!-- Add more {#snippet ...} blocks here for other common/known snippet names -->
-      <!-- For a truly dynamic system based on layoutMetadata.slots, you'd map slot IDs to these defined snippets -->
+      <!-- E.g., main_content, left_column, right_column, etc. -->
+      {#snippet main_content()} <!-- Example for SingleColumn layout -->
+        {#if blocksBySlotTarget.main}
+          {#each blocksBySlotTarget.main as block (block.id)}
+            {@const BlockComponent = BlockCmpts.get(block.blockType)}
+            {#if BlockComponent} <svelte:component this={BlockComponent} {...block.data} /> {/if}
+          {/each}
+        {/if}
+      {/snippet}
 
       {@const snippetPropsToPass: Record<string, Snippet> = {}}
       {#each layoutMetadata.slots as slotInfo}
@@ -241,6 +252,8 @@ src/
           {@const _ = snippetPropsToPass.hero = hero_content}
         {:else if slotInfo.id === 'sidebar'}
           {@const _ = snippetPropsToPass.sidebar = sidebar_content}
+        {:else if slotInfo.id === 'main'} <!-- Example for SingleColumn -->
+          {@const _ = snippetPropsToPass.main = main_content}
         <!-- Add more else if conditions for other snippet IDs defined above -->
         {/if}
       {/each}
@@ -307,7 +320,8 @@ src/
     ```typescript
     // src/routes/[[...slug]]/+page.server.ts
     import type { PageServerLoad } from './$types';
-    import type { LayoutMetadata } from '$lib/components/blocks/BlocksRendererProps'; // Adjust path as needed
+    // Assuming BlocksRendererProps.ts is in the same directory or accessible path
+    import type { LayoutMetadata } from '$lib/components/blocks/BlocksRendererProps';
 
     // This is a placeholder for how you might get all layout metadata.
     // Ideally, this is generated at build time or fetched efficiently.
@@ -324,9 +338,9 @@ src/
     }
 
     export const load: PageServerLoad = async ({ params, fetch }) => {
-      const pageSlug = params.slug || 'home'; // Default to 'home' or your landing page slug
+      const pageSlug = params.slug?.join('/') || 'home'; // Default to 'home' or your landing page slug
       // Your GraphQL query (ensure it fetches layoutId for each section)
-      const gqlQuery = `... your GraphQL query ...`;
+      const gqlQuery = `... your GraphQL query ...`; // Placeholder for actual query
 
       const response = await fetch('YOUR_PAYLOAD_CMS_GRAPHQL_ENDPOINT', {
         method: 'POST',
@@ -336,7 +350,15 @@ src/
 
       if (!response.ok) throw new Error(`Failed to fetch page: ${response.statusText}`);
       const jsonResponse = await response.json();
-      const pageDoc = jsonResponse.data.Pages.docs[0]; // Adjust based on your GQL response
+      // Adjust the next line based on your actual GraphQL response structure for a single page
+      const pageDoc = jsonResponse.data.Pages?.docs?.[0]; 
+
+      if (!pageDoc) {
+        // Handle page not found, perhaps by throwing a 404 error
+        // import { error } from '@sveltejs/kit';
+        // throw error(404, 'Page not found');
+        return { page: null }; // Or appropriate error handling
+      }
 
       const allLayoutsMeta = await getAllLayoutsMetadata();
 
@@ -362,27 +384,33 @@ src/
       // Define a more specific type for your page and section data if possible
       // import type { YourPageType } from '$lib/types'; // Example
 
-      type Props = { data: PageData };
+      type Props = { data: PageData }; // PageData is auto-generated by SvelteKit
       let { data }: Props = $props();
-      const page = data.page; // as YourPageType; // Cast if you have a specific type
+      const page = data.page; // `page` will have the structure returned by your load function
     </script>
 
-    <h1>{page?.title}</h1>
+    {#if page}
+      <h1>{page.title}</h1>
 
-    {#if page?.sections}
-      {#each page.sections as section (section.id || section.layoutId + Math.random())}
-        <div class="page-section">
-          {#if section.layoutMetadata}
-            <BlocksRenderer
-              layoutId={section.layoutId}
-              blocksData={section.blocks}
-              layoutMetadata={section.layoutMetadata}
-            />
-          {:else}
-            <p>Error: Layout metadata missing for layout "{section.layoutId}"</p>
-          {/if}
-        </div>
-      {/each}
+      {#if page.sections && page.sections.length > 0}
+        {#each page.sections as section (section.id || section.layoutId + Math.random())}
+          <div class="page-section">
+            {#if section.layoutMetadata}
+              <BlocksRenderer
+                layoutId={section.layoutId}
+                blocksData={section.blocks}
+                layoutMetadata={section.layoutMetadata}
+              />
+            {:else}
+              <p>Error: Layout metadata missing for layout "{section.layoutId}". Section ID: {section.id || 'N/A'}</p>
+            {/if}
+          </div>
+        {/each}
+      {:else}
+        <p>This page has no sections defined.</p>
+      {/if}
+    {:else}
+      <p>Page not found or error in loading page data.</p>
     {/if}
     ```
 
