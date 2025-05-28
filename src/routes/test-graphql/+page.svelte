@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { graphqlClient } from '$lib/utils/graphql-client';
+	import { graphqlClient } from '$lib/utils/graphql-client.js';
+	import { graphql } from '$lib/graphql';
+	import type { Blogs } from '$lib/graphql/graphql';
 
 	// Data from server load function
 	export let data: {
@@ -12,6 +14,27 @@
 	let clientTestResult: unknown = null;
 	let loading = false;
 	let error = '';
+
+	let blogs: Blogs['docs'] = [];
+
+	// Create typed GraphQL document
+	const GET_BLOGS = graphql(`
+		query GetBlogs($limit: Int, $page: Int) {
+			Blogs(limit: $limit, page: $page) {
+				docs {
+					id
+					title
+					content
+					createdAt
+					updatedAt
+				}
+				totalDocs
+				totalPages
+				page
+				limit
+			}
+		}
+	`);
 
 	// Test server-side GraphQL endpoint
 	async function testServerEndpoint() {
@@ -89,9 +112,35 @@
 		}
 	}
 
+	async function fetchBlogs() {
+		loading = true;
+		error = '';
+		
+		try {
+			const variables = {
+				limit: 10,
+				page: 1
+			};
+			
+			// This is now fully typed!
+			const result = await graphqlClient.request(
+				GET_BLOGS,
+				variables
+			) as { Blogs: Blogs };
+			
+			blogs = result.Blogs.docs;
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'An error occurred';
+			console.error('GraphQL Error:', err);
+		} finally {
+			loading = false;
+		}
+	}
+
 	// Test server endpoint on component mount
 	onMount(() => {
 		testServerEndpoint();
+		fetchBlogs();
 	});
 </script>
 
@@ -157,6 +206,33 @@
 		</div>
 	{/if}
 
+	<div class="section">
+		<h2>Generated Types Demo</h2>
+		<button on:click={fetchBlogs} disabled={loading}>
+			{loading ? 'Loading...' : 'Fetch Blogs (Typed)'}
+		</button>
+
+		{#if blogs.length > 0}
+			<div class="results">
+				<h3>Blogs ({blogs.length} items):</h3>
+				<ul>
+					{#each blogs as blog}
+						<li>
+							<strong>{blog.title || 'Untitled'}</strong>
+							<br />
+							<small>ID: {blog.id} | Created: {blog.createdAt}</small>
+							{#if blog.content}
+								<p>{blog.content}</p>
+							{/if}
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{:else if !loading}
+			<p>No blogs found or none created yet.</p>
+		{/if}
+	</div>
+
 	<div class="instructions">
 		<h2>GraphQL Integration Patterns</h2>
 		<p>This page demonstrates three different ways to use GraphQL with SvelteKit and your Payload CMS:</p>
@@ -213,12 +289,18 @@
 		border-left: 4px solid #cc0000;
 	}
 
-	.instructions {
-		margin-top: 2rem;
-		padding: 1.5rem;
-		background: #f0f8f0;
+	.section {
+		margin: 2rem 0;
+		padding: 1rem;
+		border: 1px solid #e0e0e0;
 		border-radius: 8px;
-		border-left: 4px solid #00cc00;
+	}
+
+	.results {
+		background: #f9f9f9;
+		padding: 1rem;
+		border-radius: 4px;
+		margin: 1rem 0;
 	}
 
 	button {

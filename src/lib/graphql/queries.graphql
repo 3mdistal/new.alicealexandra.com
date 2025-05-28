@@ -1,0 +1,65 @@
+# PayloadCMS GraphQL queries based on actual schema
+query GetBlogs($limit: Int, $page: Int) {
+  Blogs(limit: $limit, page: $page) {
+    docs {
+      id
+      title
+      content
+      createdAt
+      updatedAt
+    }
+    totalDocs
+    totalPages
+    page
+    limit
+  }
+}
+
+query GetBlog($id: String!) {
+  Blog(id: $id) {
+    id
+    title
+    content
+    createdAt
+    updatedAt
+  }
+}
+
+query GetUsers($limit: Int) {
+  Users(limit: $limit) {
+    docs {
+      id
+      email
+      createdAt
+      updatedAt
+    }
+    totalDocs
+    totalPages
+  }
+}
+
+query GetMedia($limit: Int) {
+  allMedia(limit: $limit) {
+    docs {
+      id
+      alt
+      filename
+      mimeType
+      filesize
+      url
+      createdAt
+      updatedAt
+    }
+    totalDocs
+  }
+}
+
+query GetOgInfos {
+  OgInfos {
+    docs {
+      id
+      createdAt
+      updatedAt
+    }
+  }
+} 
