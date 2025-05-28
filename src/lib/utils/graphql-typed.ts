@@ -20,6 +20,40 @@ export function createTypedClient(client: GraphQLClient) {
   };
 }
 
+// Utility function to extract plain text from PayloadCMS rich text content
+export function extractTextFromPayloadContent(content: unknown): string {
+  if (!content || typeof content !== 'object') {
+    return '';
+  }
+
+  const contentObj = content as Record<string, unknown>;
+  
+  // Handle different PayloadCMS rich text formats
+  if (Array.isArray(contentObj)) {
+    return contentObj.map(extractTextFromPayloadContent).join(' ');
+  }
+
+  if (contentObj.type === 'text' && typeof contentObj.text === 'string') {
+    return contentObj.text;
+  }
+
+  if (contentObj.children && Array.isArray(contentObj.children)) {
+    return contentObj.children.map(extractTextFromPayloadContent).join(' ');
+  }
+
+  if (typeof contentObj.text === 'string') {
+    return contentObj.text;
+  }
+
+  return '';
+}
+
+// Utility function to format PayloadCMS content for display
+export function formatPayloadContent(content: unknown): string {
+  const plainText = extractTextFromPayloadContent(content);
+  return plainText.trim() || '[Rich content - see JSON below]';
+}
+
 // Note: After running codegen, you can import the generated types like:
 // import { graphql } from '$lib/graphql';
-// import type { GetPostsQuery, GetPostsQueryVariables } from '$lib/graphql/graphql'; 
+// import type { GetBlogsQuery, GetBlogsQueryVariables } from '$lib/graphql/graphql'; 

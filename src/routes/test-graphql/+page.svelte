@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { graphqlClient } from '$lib/utils/graphql-client.js';
+	import { formatPayloadContent } from '$lib/utils/graphql-typed.js';
 	import { graphql } from '$lib/graphql';
 	import type { Blogs } from '$lib/graphql/graphql';
 
@@ -217,12 +218,23 @@
 				<h3>Blogs ({blogs.length} items):</h3>
 				<ul>
 					{#each blogs as blog}
-						<li>
+						<li class="blog-item">
 							<strong>{blog.title || 'Untitled'}</strong>
 							<br />
-							<small>ID: {blog.id} | Created: {blog.createdAt}</small>
+							<small>ID: {blog.id} | Created: {blog.createdAt ? new Date(blog.createdAt).toLocaleDateString() : 'Unknown'}</small>
 							{#if blog.content}
-								<p>{blog.content}</p>
+								<div class="blog-content">
+									<h4>Content Preview:</h4>
+									<p class="content-preview">{formatPayloadContent(blog.content)}</p>
+									
+									<details>
+										<summary>View Raw JSON</summary>
+										<pre class="content-json">{JSON.stringify(blog.content, null, 2)}</pre>
+									</details>
+								</div>
+							{/if}
+							{#if blog.author}
+								<p><strong>Author:</strong> {blog.author}</p>
 							{/if}
 						</li>
 					{/each}
@@ -301,6 +313,56 @@
 		padding: 1rem;
 		border-radius: 4px;
 		margin: 1rem 0;
+	}
+
+	.blog-item {
+		margin-bottom: 2rem;
+		padding: 1rem;
+		border: 1px solid #ddd;
+		border-radius: 8px;
+		background: white;
+	}
+
+	.blog-content {
+		margin-top: 1rem;
+	}
+
+	.blog-content h4 {
+		margin: 0 0 0.5rem 0;
+		color: #666;
+		font-size: 0.9rem;
+	}
+
+	.content-json {
+		background: #f8f8f8;
+		border: 1px solid #e0e0e0;
+		border-radius: 4px;
+		padding: 0.75rem;
+		font-size: 0.8rem;
+		max-height: 200px;
+		overflow-y: auto;
+		color: #444;
+	}
+
+	.content-preview {
+		margin: 0;
+		padding: 0;
+		font-size: 0.9rem;
+	}
+
+	details {
+		margin-top: 1rem;
+	}
+
+	details summary {
+		cursor: pointer;
+		color: #007acc;
+		font-size: 0.8rem;
+		margin-bottom: 0.5rem;
+	}
+
+	details summary:hover {
+		text-decoration: underline;
 	}
 
 	button {
