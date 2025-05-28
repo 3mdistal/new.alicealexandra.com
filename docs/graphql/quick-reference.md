@@ -122,9 +122,10 @@ import { graphqlClient } from '$lib/utils/graphql-client.js';
 
 ## 📖 Full Documentation
 
-- **Setup Guide**: `docs/GRAPHQL_TYPE_GENERATION.md`
-- **Security Model**: `docs/GRAPHQL_SETUP.md`
-- **Changes Log**: `docs/CHANGELOG.md`
+- **[Complete Documentation Index](../README.md)** - All documentation
+- **[Type Generation Guide](./type-generation.md)** - Detailed setup and usage
+- **[Security Model](./setup.md)** - Security implementation details
+- **[Project Changelog](../changelog.md)** - Changes and updates
 
 ## 🎯 Development Patterns
 
@@ -158,5 +159,5 @@ const data = await graphqlClient.request(query, variables);
 
 ---
 
-*Last updated: January 2024*
-*For detailed documentation, see the `docs/` directory* 
+*Last updated: January 2025*
+*For detailed documentation, see the [docs directory](../README.md)* 

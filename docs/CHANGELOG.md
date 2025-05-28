@@ -2,7 +2,7 @@
 
 All notable changes to the GraphQL integration in this project are documented here.
 
-## [2024-01-XX] - GraphQL Type Generation Implementation
+## [2025-05-28] - GraphQL Type Generation Implementation
 
 ### 🎉 Added
 - **Complete GraphQL Code Generator setup** for type-safe queries
@@ -40,7 +40,7 @@ All notable changes to the GraphQL integration in this project are documented he
   - `index.ts` - Main exports
 - `src/lib/graphql/queries.graphql` - Example GraphQL queries for PayloadCMS
 - `src/lib/utils/graphql-typed.ts` - Utility functions for typed GraphQL
-- `docs/GRAPHQL_TYPE_GENERATION.md` - Complete setup and usage documentation
+- `docs/graphql/type-generation.md` - Complete setup and usage documentation
 
 ### 🛠️ Files Modified
 - `src/lib/utils/graphql-client.ts` - **CRITICAL FIX**: Added `print()` function from graphql package to properly convert TypedDocumentNode to query strings
@@ -87,7 +87,7 @@ const result = await graphqlClient.request(GET_BLOGS, { limit: 10 });
 - **Content Display**: Fixed PayloadCMS rich content showing as `[Object Object]`
 
 ### 📚 Documentation Added
-- Complete setup guide in `docs/GRAPHQL_TYPE_GENERATION.md`
+- Complete setup guide in `docs/graphql/type-generation.md`
 - PayloadCMS collections reference
 - Example queries for all collections
 - Troubleshooting guide
@@ -126,4 +126,29 @@ pnpm run codegen:watch
 - Basic GraphQL client utilities
 - Test page with multiple GraphQL patterns
 
-See `docs/GRAPHQL_SETUP.md` for full details of the initial implementation. 
+See `docs/graphql/setup.md` for full details of the initial implementation.
+
+---
+
+## [2025-01-XX] - Documentation Reorganization
+
+### 🗂️ Documentation Structure Improved
+- **Organized by topic**: Moved all documentation to logical subdirectories
+- **Consistent naming**: Changed from ALL_CAPS to lowercase-with-hyphens
+- **Better navigation**: Created comprehensive docs index and cross-references
+
+### 📁 Files Moved and Renamed
+- `docs/GRAPHQL_SETUP.md` → `docs/graphql/setup.md`
+- `docs/GRAPHQL_TYPE_GENERATION.md` → `docs/graphql/type-generation.md`
+- `docs/QUICK_REFERENCE.md` → `docs/graphql/quick-reference.md`
+- `docs/CHANGELOG.md` → `docs/changelog.md`
+- `src/lib/components/implementation-plan.md` → `docs/components/architecture-overview.md`
+- `src/lib/components/step-by-step-implementation.md` → `docs/components/implementation-guide.md`
+- `src/lib/components/phase-1-implementation-notes.md` → `docs/components/phase-1-notes.md`
+- `src/lib/utils/ui-abstraction-ideas.md` → `docs/components/ui-abstractions.md`
+
+### ✨ New Documentation Features
+- **[docs/README.md](./README.md)** - Comprehensive documentation index
+- **Topic-based organization**: GraphQL and Component docs in subdirectories
+- **Clear navigation**: Quick start guides and cross-references
+- **Updated main README**: Reflects new documentation structure 

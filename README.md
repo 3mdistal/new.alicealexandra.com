@@ -17,8 +17,13 @@ pnpm run dev
 ```
 
 ### Documentation
-- **Quick Reference**: [`docs/QUICK_REFERENCE.md`](docs/QUICK_REFERENCE.md)
-- **Type Generation**: [`docs/GRAPHQL_TYPE_GENERATION.md`](docs/GRAPHQL_TYPE_GENERATION.md)
-- **Security Setup**: [`docs/GRAPHQL_SETUP.md`](docs/GRAPHQL_SETUP.md)
-- **Changelog**: [`docs/CHANGELOG.md`](docs/CHANGELOG.md)
+- **[📚 Full Documentation](docs/README.md)** - Complete documentation index
+- **GraphQL**:
+  - **[Quick Reference](docs/graphql/quick-reference.md)** - Common tasks and examples
+  - **[Type Generation](docs/graphql/type-generation.md)** - Type-safe development setup
+  - **[Security Setup](docs/graphql/setup.md)** - Secure integration guide
+- **Component System**:
+  - **[Architecture Overview](docs/components/architecture-overview.md)** - System design and concepts
+  - **[Implementation Guide](docs/components/implementation-guide.md)** - Step-by-step development
+- **[Changelog](docs/changelog.md)** - Project history and updates
 
