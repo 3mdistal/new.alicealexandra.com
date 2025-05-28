@@ -1,38 +1,24 @@
-# sv
+## GraphQL Integration
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+This project includes a complete type-safe GraphQL integration with PayloadCMS:
 
-## Creating a project
+- **🔒 Secure**: API keys protected with SvelteKit environment variables
+- **🎯 Type-Safe**: Auto-generated TypeScript types from GraphQL schema
+- **⚡ Fast**: Multiple integration patterns (SSR, CSR, API routes)
 
-If you're seeing this, you've probably already done this step. Congrats!
-
+### Quick Start
 ```bash
-# create a new project in the current directory
-npx sv create
+# Generate GraphQL types
+pnpm run codegen
 
-# create a new project in my-app
-npx sv create my-app
+# Test the integration
+pnpm run dev
+# Visit: http://localhost:5174/test-graphql
 ```
 
-## Developing
+### Documentation
+- **Quick Reference**: [`docs/QUICK_REFERENCE.md`](docs/QUICK_REFERENCE.md)
+- **Type Generation**: [`docs/GRAPHQL_TYPE_GENERATION.md`](docs/GRAPHQL_TYPE_GENERATION.md)
+- **Security Setup**: [`docs/GRAPHQL_SETUP.md`](docs/GRAPHQL_SETUP.md)
+- **Changelog**: [`docs/CHANGELOG.md`](docs/CHANGELOG.md)
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
