@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import type { SvelteComponent, Snippet } from 'svelte';
 	import type {
 		BlockData,
@@ -12,17 +11,15 @@
 
 	let { layoutId, blocksData, layoutMetadata }: BlocksRendererComponentProps = $props();
 
+	// Use eager imports to load all components at build time
 	const layoutModules = import.meta.glob<ComponentModule>(
-		'$lib/components/block_layouts/*.svelte'
+		'$lib/components/block_layouts/*.svelte',
+		{ eager: true }
 	);
 	const blockTypeModules = import.meta.glob<ComponentModule>(
-		'$lib/components/blocks/block_types/*.svelte'
+		'$lib/components/blocks/block_types/*.svelte',
+		{ eager: true }
 	);
-
-	let LayoutCmpt: typeof SvelteComponent | null = $state(null);
-	const BlockCmpts = new Map<string, typeof SvelteComponent>();
-	let isLoading = $state(true);
-	let loadingError = $state<string | null>(null);
 
 	// Reactive: Group blocks by their slot target
 	let blocksBySlotTarget: BlocksBySlotTarget = $derived(
@@ -33,77 +30,74 @@
 		}, {} as BlocksBySlotTarget)
 	);
 
-	onMount(async () => {
-		try {
-			isLoading = true;
-			loadingError = null;
-
-			// Load Layout Component
-			let layoutFound = false;
-			for (const [path, loadModule] of Object.entries(layoutModules)) {
-				const name = path.split('/').pop()?.replace('.svelte', '');
-				if (name === layoutId) {
-					const module = (await loadModule()) as ComponentModule;
-					LayoutCmpt = module.default;
-					layoutFound = true;
-					break;
-				}
+	// Load Layout Component - find it once and cache it
+	function findLayoutComponent(id: string): typeof SvelteComponent | null {
+		for (const [path, module] of Object.entries(layoutModules)) {
+			const fileName = path.split('/').pop()?.replace('.svelte', '');
+			if (fileName === id) {
+				return module.default;
 			}
-
-			if (!layoutFound) {
-				throw new Error(`Layout component "${layoutId}" not found`);
-			}
-
-			// Load Block Type Components
-			const neededBlockTypes = new Set(blocksData.map((b) => b.blockType));
-			for (const [path, loadModule] of Object.entries(blockTypeModules)) {
-				const name = path.split('/').pop()?.replace('.svelte', '');
-				if (name && neededBlockTypes.has(name)) {
-					const module = (await loadModule()) as ComponentModule;
-					BlockCmpts.set(name, module.default);
-				}
-			}
-
-			// Check if all needed block types were loaded
-			for (const blockType of neededBlockTypes) {
-				if (!BlockCmpts.has(blockType)) {
-					throw new Error(`Block type component "${blockType}" not found`);
-				}
-			}
-
-			isLoading = false;
-		} catch (error) {
-			loadingError = error instanceof Error ? error.message : 'Unknown error occurred';
-			isLoading = false;
 		}
-	});
+		return null;
+	}
 
-	// Check if we have all required data and components loaded
-	let canRender = $derived(
-		LayoutCmpt &&
-			layoutMetadata &&
-			!isLoading &&
-			!loadingError &&
-			BlockCmpts.size >= new Set(blocksData.map((b) => b.blockType)).size
-	);
+	// Load Block Type Components - find them once and cache them
+	function findBlockComponents(neededTypes: Set<string>): Map<string, typeof SvelteComponent> {
+		const components = new Map<string, typeof SvelteComponent>();
+		
+		for (const [path, module] of Object.entries(blockTypeModules)) {
+			const fileName = path.split('/').pop()?.replace('.svelte', '');
+			if (fileName && neededTypes.has(fileName)) {
+				components.set(fileName, module.default);
+			}
+		}
+		return components;
+	}
+
+	// Get the layout component
+	let LayoutComponent = findLayoutComponent(layoutId);
+
+	// Get needed block types
+	let neededBlockTypes = new Set(blocksData.map((b) => b.blockType));
+	let BlockComponents = findBlockComponents(neededBlockTypes);
+
+	// Error checking
+	let loadingError: string | null = $state(null);
+
+	if (!LayoutComponent) {
+		const availableLayouts = Object.keys(layoutModules).map(path => 
+			path.split('/').pop()?.replace('.svelte', '')
+		);
+		loadingError = `Layout component "${layoutId}" not found. Available layouts: ${availableLayouts.join(', ')}`;
+	} else {
+		// Check if all needed block types were loaded
+		for (const blockType of neededBlockTypes) {
+			if (!BlockComponents.has(blockType)) {
+				const availableBlockTypes = Object.keys(blockTypeModules).map(path => 
+					path.split('/').pop()?.replace('.svelte', '')
+				);
+				loadingError = `Block type component "${blockType}" not found. Available block types: ${availableBlockTypes.join(', ')}`;
+				break;
+			}
+		}
+	}
+
+	// Check if we can render
+	let canRender = $derived(LayoutComponent && layoutMetadata && !loadingError && BlockComponents.size >= neededBlockTypes.size);
 </script>
 
 {#if loadingError}
 	<div class="blocks-renderer-error">
 		<p>Error loading components: {loadingError}</p>
 	</div>
-{:else if isLoading}
-	<div class="blocks-renderer-loading">
-		<p>Loading layout and components...</p>
-	</div>
-{:else if canRender && LayoutCmpt && layoutMetadata}
+{:else if canRender && LayoutComponent && layoutMetadata}
 	<!-- Define snippets for each slot -->
 	{#snippet main_content()}
 		{#if blocksBySlotTarget.main}
 			{#each blocksBySlotTarget.main as block (block.id)}
-				{@const BlockComponent = BlockCmpts.get(block.blockType)}
+				{@const BlockComponent = BlockComponents.get(block.blockType)}
 				{#if BlockComponent}
-					<svelte:component this={BlockComponent} {...block.data} />
+					<BlockComponent {...block.data} />
 				{:else}
 					<div class="block-error">Block type "{block.blockType}" not loaded</div>
 				{/if}
@@ -123,29 +117,20 @@
 		return props;
 	})()}
 
-	<!-- Render the layout component with the snippet props -->
-	<svelte:component this={LayoutCmpt} {...snippetPropsToPass} />
+	<!-- Render the layout component with the snippet props using modern Svelte 5 syntax -->
+	<LayoutComponent {...snippetPropsToPass} />
 {:else}
 	<div class="blocks-renderer-error">
 		<p>Unable to render: Missing layout metadata or components</p>
+		<p>Debug: LayoutComponent={!!LayoutComponent}, layoutMetadata={!!layoutMetadata}, loadingError={loadingError}, BlockComponents.size={BlockComponents.size}, neededBlockTypes={neededBlockTypes.size}</p>
 	</div>
 {/if}
 
 <style>
-	.blocks-renderer-loading,
 	.blocks-renderer-error {
 		padding: 1rem;
 		border-radius: 4px;
 		margin: 1rem 0;
-	}
-
-	.blocks-renderer-loading {
-		background-color: #f0f9ff;
-		border: 1px solid #0ea5e9;
-		color: #0c4a6e;
-	}
-
-	.blocks-renderer-error {
 		background-color: #fef2f2;
 		border: 1px solid #ef4444;
 		color: #991b1b;

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import BlocksRenderer from '$lib/components/blocks/BlocksRenderer.svelte';
 	import type { BlockData, LayoutMetadata } from '$lib/components/blocks/BlocksRendererProps.js';
-
-	// Hardcoded layout ID
-	const layoutId = 'singleColumn';
+	
+	// Hardcoded layout ID - must match the actual file name
+	const layoutId = 'SingleColumn';
 
 	// Hardcoded blocks data
 	const blocksData: BlockData[] = [
