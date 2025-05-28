@@ -11,6 +11,9 @@ importers:
       '@graphql-typed-document-node/core':
         specifier: ^3.2.0
         version: 3.2.0(graphql@16.11.0)
+      graphql:
+        specifier: ^16.11.0
+        version: 16.11.0
     devDependencies:
       '@chromatic-com/storybook':
         specifier: ^3

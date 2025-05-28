@@ -1,4 +1,5 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { print } from 'graphql';
 
 export interface GraphQLClientOptions {
 	endpoint: string;
@@ -28,7 +29,7 @@ export class GraphQLClient {
 		variables?: TVariables,
 		requestHeaders?: Record<string, string>
 	): Promise<TResult> {
-		const query = typeof document === 'string' ? document : document.toString();
+		const query = typeof document === 'string' ? document : print(document);
 		
 		const response = await fetch(this.endpoint, {
 			method: 'POST',
