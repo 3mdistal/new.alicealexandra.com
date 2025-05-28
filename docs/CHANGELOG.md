@@ -2,6 +2,127 @@
 
 All notable changes to the GraphQL integration in this project are documented here.
 
+## [2025-05-28] - Storybook Integration & Dynamic Blocks Phase 1
+
+### 🎨 Storybook Setup Added
+- **Complete Storybook 8.6.12 integration** for component development and testing
+- **SvelteKit integration** with proper configuration for Svelte components
+- **Multiple addons** for enhanced development experience
+
+#### Dependencies Added
+```json
+{
+  "devDependencies": {
+    "@chromatic-com/storybook": "^3",
+    "@storybook/addon-essentials": "^8.6.12",
+    "@storybook/addon-svelte-csf": "^5.0.0-next.0",
+    "@storybook/blocks": "^8.6.12",
+    "@storybook/experimental-addon-test": "^8.6.12",
+    "@storybook/svelte": "^8.6.12",
+    "@storybook/sveltekit": "^8.6.12",
+    "@storybook/test": "^8.6.12",
+    "storybook": "^8.6.12"
+  }
+}
+```
+
+#### Configuration Files Created
+- `.storybook/main.ts` - Main Storybook configuration
+- `.storybook/preview.ts` - Global preview configuration
+- `.storybook/vitest.setup.ts` - Test setup integration
+
+#### Scripts Added
+- `pnpm run storybook` - Launch Storybook dev server on port 6006
+- `pnpm run build-storybook` - Build static Storybook for deployment
+
+### 🧩 Dynamic Block System - Phase 1 Complete
+
+#### Core Architecture Implemented
+- **TypeScript Interfaces** (`src/lib/components/blocks/BlocksRendererProps.ts`)
+  - Complete type definitions for block data, layout metadata, and component props
+  - Type-safe interfaces for the entire block rendering system
+
+- **TextBlock Component** (`src/lib/components/blocks/block_types/TextBlock.svelte`)
+  - HTML content rendering with `{@html text}`
+  - Responsive styling and proper typography
+  - **Storybook stories** with multiple examples (Default, Rich HTML, Multiple Paragraphs, Empty, Long Content)
+
+- **SingleColumn Layout** (`src/lib/components/block_layouts/SingleColumn.svelte`)
+  - Svelte 5 snippet-based architecture
+  - Exported metadata for system discovery
+  - Responsive design (max-width: 800px, centered)
+
+- **BlocksRenderer Component** (`src/lib/components/blocks/BlocksRenderer.svelte`)
+  - Dynamic component loading using `import.meta.glob`
+  - Modern Svelte 5 syntax with proper runes (`$state()`, `$derived()`)
+  - Error handling and debugging capabilities
+
+#### Test Implementation
+- **Test Page** at `/test-blocks` demonstrating complete functionality
+- **Full test coverage** with unit, integration, and type tests
+- **E2E testing ready** with Playwright configuration
+
+#### Key Technical Solutions
+- **Fixed Svelte 5 deprecations**: Moved away from `<svelte:component>` to direct component references
+- **Resolved content flickering**: Stable function calls instead of reactive `$derived.by()`
+- **Optimized imports**: Eager imports for build-time component loading
+- **Consistent naming**: File names match component IDs for easier maintenance
+
+### 📚 Documentation Organization
+
+#### New Structure Implemented
+- **Topic-based organization**: `docs/components/` and `docs/graphql/` subdirectories
+- **Consistent naming**: Lowercase-with-hyphens convention throughout
+- **Comprehensive index**: `docs/README.md` with navigation and quick start guides
+
+#### Files Reorganized
+- `src/lib/components/*.md` → `docs/components/` (4 files moved)
+- `docs/UPPER_CASE.md` → `docs/lowercase-names.md` (4 files renamed)
+- All internal references updated to reflect new structure
+
+### 🚀 Development Experience Improvements
+
+#### Storybook Stories Created
+- **TextBlock stories** with comprehensive examples
+- **Auto-documentation** with argTypes and controls
+- **Visual regression testing** capabilities
+
+#### Testing Infrastructure
+- **Vitest integration** with proper environment configuration
+- **Component isolation** testing with Storybook
+- **Type safety** validation throughout
+
+### 📋 Current Status
+
+#### Phase 1 ✅ Complete
+- Dynamic layout loading by ID
+- Dynamic block type loading
+- Snippet-based content rendering
+- HTML content rendering in TextBlocks
+- Proper error handling and debugging
+- Modern Svelte 5 syntax throughout
+- Zero TypeScript errors or warnings
+- All tests passing
+
+#### Ready for Phase 2
+- Foundation solid for expansion
+- Architecture supports multiple block types and layouts
+- Component discovery system ready for scaling
+- Documentation structure supports growth
+
+### 🔧 Commands Added
+```bash
+# Storybook development
+pnpm run storybook           # Launch Storybook (port 6006)
+pnpm run build-storybook     # Build static Storybook
+
+# Block system testing
+pnpm run dev                 # Visit /test-blocks for demo
+pnpm run test:unit           # Run component tests
+```
+
+---
+
 ## [2025-05-28] - GraphQL Type Generation Implementation
 
 ### 🎉 Added
